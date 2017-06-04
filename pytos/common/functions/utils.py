@@ -19,6 +19,7 @@ import multiprocessing.pool
 import os
 from socket import error as socket_error
 
+import fcntl
 import paramiko
 
 from pytos.common.logging.definitions import COMMON_LOGGER_NAME
