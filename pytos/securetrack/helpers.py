@@ -244,17 +244,18 @@ class Secure_Track_Helper(Secure_API_Helper):
         """
         logger.info("Getting SecureTrack device with name %s.", device_name)
         try:
-           response_string = self.get_uri("/securetrack/api/devices?name={}".format(device_name),
-                                          expected_status_codes=200).response.content
+            response_string = self.get_uri("/securetrack/api/devices?name={}".format(device_name),
+                                           expected_status_codes=200).response.content
         except REST_Not_Found_Error:
-           message = "Device {} does not exist.".format(device_name)
-           logger.critical(message)
-           raise ValueError(message)
+            message = "Device {} does not exist.".format(device_name)
+            logger.critical(message)
+            raise ValueError(message)
         except RequestException:
-           message = "Failed to GET device {}.".format(device_name)
-           logger.critical(message)
-           raise IOError(message)
-        found_devices = [device for device in Devices_List.from_xml_string(response_string) if device.name.lower() == device_name.lower()]
+            message = "Failed to GET device {}.".format(device_name)
+            logger.critical(message)
+            raise IOError(message)
+        found_devices = [device for device in Devices_List.from_xml_string(response_string)
+                         if device.name.lower() == device_name.lower()]
         if not found_devices:
             message = "Device {} does not exist.".format(device_name)
             logger.critical(message)
@@ -294,8 +295,8 @@ class Secure_Track_Helper(Secure_API_Helper):
         logger.debug("Getting generic device with name '{}' on domain {}".format(generic_device_name, domain_id))
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/generic_devices?name={}&context={}".format(generic_device_name, domain_id),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/generic_devices?name={}&context={}".format(generic_device_name, domain_id),
+                expected_status_codes=200).response.content
         except RequestException:
             message = "Failed to GET generic device with name '{}' on domain {}.".format(generic_device_name, domain_id)
             logger.critical(message)
@@ -409,8 +410,8 @@ class Secure_Track_Helper(Secure_API_Helper):
             logger.info("Getting shadowed rules for device ID '%s'", device_id)
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/devices/{}/cleanups?code=C01{}".format(device_id, params_string),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/devices/{}/cleanups?code=C01{}".format(device_id, params_string),
+                expected_status_codes=200).response.content
         except RequestException:
             message = "Failed to get the list of shadowed rules for device ID {}.".format(device_id)
             logger.critical(message)
@@ -464,8 +465,8 @@ class Secure_Track_Helper(Secure_API_Helper):
             rule_uids = ",".join(rule_uids)
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/devices/{}/shadowing_rules?shadowed_uids={}".format(device_id, rule_uids),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/devices/{}/shadowing_rules?shadowed_uids={}".format(device_id, rule_uids),
+                expected_status_codes=200).response.content
         except RequestException:
             message = "Failed to get the list of shadowed rules for device ID {}.".format(device_id)
             logger.critical(message)
@@ -600,8 +601,8 @@ class Secure_Track_Helper(Secure_API_Helper):
             logger.info("Getting rules with rule documentation.")
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/revisions/{}/rules{}".format(revision_id, rule_documentation_uri_suffix),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/revisions/{}/rules{}".format(revision_id, rule_documentation_uri_suffix),
+                expected_status_codes=200).response.content
         except RequestException:
             message = "Failed to get the list of rules for revision ID {}.".format(revision_id)
             logger.critical(message)
@@ -877,8 +878,8 @@ class Secure_Track_Helper(Secure_API_Helper):
         logger.info("Getting services for device with ID {} and service name '{}'".format(device_id, service_name))
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/devices/{}/services?name={}".format(device_id, service_name),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/devices/{}/services?name={}".format(device_id, service_name),
+                expected_status_codes=200).response.content
         except RequestException:
             message = "Failed to get the list of services for device ID {}.".format(device_id)
             logger.critical(message)
@@ -1162,6 +1163,12 @@ class Secure_Track_Helper(Secure_API_Helper):
         """
         logger.info("Updating rule documentation for rule ID '%s' under device ID '%s'.", rule.id, device_id)
         try:
+            # FIX for different tag name on put of documentation
+            rule.documentation._xml_tag = Elements.RULE_DOCUMENTATION
+        except (TypeError, AttributeError) as e:
+            logger.error("Rule dose not contains documentation. Error '{}'".format(e))
+            pass
+        try:
             rule_documentation_xml = rule.documentation.to_xml_string().encode()
             response = self.put_uri("/securetrack/api/devices/{}/rules/{}/documentation".format(device_id, rule.id),
                                     rule_documentation_xml, expected_status_codes=[201, 204])
@@ -1195,8 +1202,8 @@ class Secure_Track_Helper(Secure_API_Helper):
         logger.info("Getting Rule Documentation for device ID {} for Rule ID {} .".format(device_id, rule_id))
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/devices/{}/rules/{}/documentation".format(device_id, rule_id),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/devices/{}/rules/{}/documentation".format(device_id, rule_id),
+                expected_status_codes=200).response.content
         except REST_Not_Found_Error:
             message = "Device with ID {} does not exist OR Rule ID {} does not exist.".format(device_id, rule_id)
             logger.critical(message)
@@ -1620,8 +1627,8 @@ class Secure_Track_Helper(Secure_API_Helper):
         logger.info("Getting network object with ID %s for device %s.", network_object_id, device_id)
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/devices/{}/network_objects/{}".format(device_id, network_object_id),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/devices/{}/network_objects/{}".format(device_id, network_object_id),
+                expected_status_codes=200).response.content
             network_object = Network_Objects_List.from_xml_string(response_string)[0]
         except RequestException:
             message = "Failed to get the list of rules for device ID {}.".format(device_id)
@@ -1840,7 +1847,7 @@ class Secure_Track_Helper(Secure_API_Helper):
     def get_security_policy_device_violations_by_severity(self, device_id, severity, policy_type=None):
         logger.info("Getting rule violation by device id '{}' and severity '{}'".format(device_id, severity))
         parameters = "severity={}".format(severity) if policy_type is None else "type={}&severity={}".format(
-                policy_type, severity)
+            policy_type, severity)
         url = "/securetrack/api/violating_rules/{}/device_violations?{}".format(device_id, parameters)
         try:
             response_string = self.get_uri(url, expected_status_codes=200).response.content
@@ -1872,8 +1879,8 @@ class Secure_Track_Helper(Secure_API_Helper):
             violations[device] = {}
             for severity in severity_levels_list:
                 violations[device][severity] = process_pool.apply_async(
-                        self.get_security_policy_device_violations_by_severity, args=(device.id, severity),
-                        kwds={'policy_type': 'SECURITY_POLICY'})
+                    self.get_security_policy_device_violations_by_severity, args=(device.id, severity),
+                    kwds={'policy_type': 'SECURITY_POLICY'})
 
         for device, violations_dict in violations.items():
             for severity, violations_results in violations_dict.items():
@@ -1898,7 +1905,7 @@ class Secure_Track_Helper(Secure_API_Helper):
         src_network_object_ids = [src.id for src in rule.src_networks]
         dst_network_object_ids = [dst.id for dst in rule.dst_networks]
         network_objects = self.get_network_objects_by_device_and_object_ids(device_id, set(
-                itertools.chain(src_network_object_ids, dst_network_object_ids)))
+            itertools.chain(src_network_object_ids, dst_network_object_ids)))
         network_object_id_to_network_objects = {network_object.id: network_object for network_object in network_objects}
 
         service_ids = [srv.id for srv in rule.dst_services]
@@ -1929,8 +1936,8 @@ class Secure_Track_Helper(Secure_API_Helper):
             rule_to_dst_ids[rule] = [dst.id for dst in rule.dst_networks]
             rule_to_srv_ids[rule] = [srv.id for srv in rule.dst_services]
         network_objects = self.get_network_objects_by_device_and_object_ids(device_id, set(
-                itertools.chain(itertools.chain.from_iterable(rule_to_src_ids.values()),
-                                itertools.chain.from_iterable(rule_to_dst_ids.values()))))
+            itertools.chain(itertools.chain.from_iterable(rule_to_src_ids.values()),
+                            itertools.chain.from_iterable(rule_to_dst_ids.values()))))
         network_object_id_to_network_objects = {network_object.id: network_object for network_object in network_objects}
         services = self.get_services_by_device_and_object_ids(device_id, set(rule_to_srv_ids.values()))
         service_id_to_service = {service.id: service for service in services}
@@ -2016,8 +2023,8 @@ class Secure_Track_Helper(Secure_API_Helper):
             network_object_ids = ",".join([str(network_object_id) for network_object_id in network_object_ids])
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/revisions/{}/network_objects/{}".format(revision_id, network_object_ids),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/revisions/{}/network_objects/{}".format(revision_id, network_object_ids),
+                expected_status_codes=200).response.content
         except RequestException:
             message = "Failed to get the list of rules for revision ID {}.".format(revision_id)
             logger.critical(message)
@@ -2045,8 +2052,8 @@ class Secure_Track_Helper(Secure_API_Helper):
             network_object_ids = ",".join([str(network_object_id) for network_object_id in network_object_ids])
         try:
             response_string = self.get_uri(
-                    "/securetrack/api/devices/{}/network_objects/{}".format(device_id, network_object_ids),
-                    expected_status_codes=200).response.content
+                "/securetrack/api/devices/{}/network_objects/{}".format(device_id, network_object_ids),
+                expected_status_codes=200).response.content
         except RequestException:
             message = "Failed to get the list of rules for device ID {}.".format(device_id)
             logger.critical(message)
@@ -2103,6 +2110,32 @@ class Secure_Track_Helper(Secure_API_Helper):
             logger.critical(message)
             raise IOError(message)
         return Device_Revision.from_xml_string(response_string)
+
+    def get_device_routes(self, device_id, is_generic=None, start=None, count=None):
+        """Get the list of device routes from SecureTrack.
+
+        :return: list of available routes
+        :rtype: RoutesList
+        """
+        logger.info("Getting device routes from SecureTrack")
+        device_route_uri_suffix = ""
+        if is_generic:
+            device_route_uri_suffix += "&is_generic={}".format(is_generic)
+        if start and count:
+            device_route_uri_suffix += "&start={}&count={}".format(start, count)
+        try:
+            response_string = self.get_uri(
+                "/securetrack/api/devices/topology_routes?mgmtId={}{}".format(device_id, device_route_uri_suffix),
+                expected_status_codes=200).response.content
+        except REST_Not_Found_Error:
+            message = "Device with ID {} does not exist.".format(device_id)
+            logger.critical(message)
+            raise ValueError(message)
+        except RequestException:
+            message = "Failed to get routes for device id '{}'".format(device_id)
+            logger.critical(message)
+            raise IOError(message)
+        return RoutesList.from_xml_string(response_string)
 
     def get_device_generic_config_by_id(self, device_id):
 
@@ -2170,28 +2203,3 @@ class Secure_Track_Helper(Secure_API_Helper):
             logger.critical(message)
             raise IOError(message)
 
-    def get_device_routes(self, device_id, is_generic=None, start=None, count=None):
-        """Get the list of device routes from SecureTrack.
-
-        :return: list of available routes
-        :rtype: RoutesList
-        """
-        logger.info("Getting device routes from SecureTrack")
-        device_route_uri_suffix = ""
-        if is_generic:
-            device_route_uri_suffix += "&is_generic={}".format(is_generic)
-        if start and count:
-            device_route_uri_suffix += "&start={}&count={}".format(start, count)
-        try:
-            response_string = self.get_uri(
-                "/securetrack/api/devices/topology_routes?mgmtId={}{}".format(device_id, device_route_uri_suffix),
-                expected_status_codes=200).response.content
-        except REST_Not_Found_Error:
-            message = "Device with ID {} does not exist.".format(device_id)
-            logger.critical(message)
-            raise ValueError(message)
-        except RequestException:
-            message = "Failed to get routes for device id '{}'".format(device_id)
-            logger.critical(message)
-            raise IOError(message)
-        return RoutesList.from_xml_string(response_string)

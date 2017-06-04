@@ -26,6 +26,79 @@ from pytos.common.logging.definitions import COMMON_LOGGER_NAME
 logger = logging.getLogger(COMMON_LOGGER_NAME)
 
 
+class FileLock:
+    """
+    Simple implementation of the file lock based on fcntl.lock.
+    Can be both blocking and not.
+    """
+
+    DEFAULT_FILE_LOCK_PATH = "/tmp/"
+
+    def __init__(self, lock_file_name, *, blocking=False, lock_folder=None):
+        """Constructor
+
+        :param lock_file_name: The name of the file to be used.
+        :type lock_file_name: str|int
+        :keyword blocking: (Optional) If to wait for release or to fail if already blocked. Default: False
+        :type blocking: bool
+        :keyword lock_folder: (Optional) Specify custom path to the folder for lock.
+        :type lock_folder: str
+        """
+        # Make it String as it might be passed as ticket id
+        self.lock_file_name = str(lock_file_name)
+        if not self.lock_file_name.endswith(".lock"):
+            self.lock_file_name += ".lock"
+        self.locked = False
+        self.lock = None
+        self.lock_file = None
+        self.blocking = blocking
+        if not lock_folder:
+            lock_folder = FileLock.DEFAULT_FILE_LOCK_PATH
+        else:
+            if not lock_folder.endswith("/"):
+                lock_folder += "/"
+        self.file_path = lock_folder + self.lock_file_name
+        self._get_lock_file_handle()
+
+    def __enter__(self):
+        self.acquire()
+
+    def __exit__(self, _type, value, traceback):
+        self.release()
+
+    def _get_lock_file_handle(self):
+        self.lock_file = open(self.file_path, "w")
+
+    def acquire(self, blocking=None):
+        # Give an opportunity to set blocking with the class for context use
+        if blocking is None:
+            blocking = self.blocking
+
+        if blocking:
+            lock_mode = fcntl.LOCK_EX
+        else:
+            lock_mode = fcntl.LOCK_EX | fcntl.LOCK_NB
+        if self.lock_file.closed:
+            self._get_lock_file_handle()
+        if not self.locked:
+            try:
+                self.lock = fcntl.flock(self.lock_file, lock_mode)
+                self.locked = True
+            except IOError:
+                raise IOError("File '{}' is already locked.".format(self.lock_file_name))
+        else:
+            raise IOError("File '{}' is already locked.".format(self.lock_file_name))
+
+    def release(self):
+        if self.locked:
+            try:
+                self.lock_file.close()
+                os.remove(self.file_path)
+                self.locked = False
+            except OSError:
+                pass
+
+
 def get_range_including_end(start, end):
     return range(start, end + 1)
 
@@ -150,3 +223,16 @@ def transfer_file_sftp(ssh_client, local_path, remote_path):
     sftp_client = paramiko.SFTPClient.from_transport(ssh_client.get_transport())
     sftp_client.put(local_path, remote_path)
     logger.info("Done transferring file '{}' to remote path {}.".format(local_path, remote_path))
+
+
+def get_file_sftp(ssh_client, local_path, remote_path):
+    """Download file from remote server by SFTP
+    :param ssh_client: SSH client object by generating from the get_ssh_client()
+    :param local_path: Full path of the local file
+    :param remote_path: Full path of the remote file
+    :return: None
+    """
+    logger.info("Getting file '{}' and saving to '{}'".format(remote_path, local_path))
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    sftp_client = paramiko.SFTPClient.from_transport(ssh_client.get_transport())
+    sftp_client.get(remote_path, local_path)

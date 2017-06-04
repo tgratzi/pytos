@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import datetime
-import enum
 import fcntl
-import os
 import time
 from collections import OrderedDict
-import logging
+
 
 from pytos.secureapp.xml_objects.base_types import Base_Link_Target, URL_Link
 from pytos.securechange import definitions
@@ -25,12 +23,16 @@ from pytos.securechange.xml_objects.base_types import Step_Field_Base, Step_Mult
 from pytos.securechange.xml_objects.restapi.step.access_request.accessrequest import *
 from pytos.common.base_types import XML_List, XML_Object_Base, Flat_XML_Object_Base
 from pytos.common.logging.definitions import XML_LOGGER_NAME
-from pytos.common.functions import str_to_bool, get_xml_node, get_xml_text_value, get_xml_int_value
-from pytos.common.functions import convert_timedelta_to_seconds
+from pytos.common.functions import str_to_bool, get_xml_node, get_xml_text_value, get_xml_int_value, \
+    convert_timedelta_to_seconds
+from pytos.common.functions.utils import FileLock
 from pytos.common.definitions.xml_tags import TYPE_ANY, TYPE_ATTRIB, TYPE_DNS, TYPE_IP, TYPE_OBJECT, TYPE_NETWORK, \
     TYPE_HOST, SERVICE_OBJECT_TYPE_PREDEFINED, SERVICE_OBJECT_TYPE_PROTOCOL, Elements, Attributes
 
 logger = logging.getLogger(XML_LOGGER_NAME)
+
+# For backward compatibility use FileLock as Ticket_Lock too
+Ticket_Lock = FileLock
 
 
 class TicketList(XML_List):
@@ -55,7 +57,6 @@ class TicketList(XML_List):
 
 
 class TicketStatus(enum.Enum):
-    # TODO: Move this enum to be used for all usage of ticket statuses
     Closed = "Ticket Closed"
     Cancelled = "Ticket Cancelled"
     Rejected = "Ticket Rejected"
@@ -199,6 +200,24 @@ class Ticket(XML_Object_Base):
 
         """
         return self.get_step_by_index(-2)
+
+    def get_first_step(self):
+        """
+        Return the first ticket step.
+        :return: The first ticket step.
+        :rtype: Secure_Change.XML_Objects.REST.Ticket_Step
+
+        """
+        return self.get_step_by_index(0)
+
+    def get_first_task(self):
+        """
+        Return the first ticket task.
+        :return: The first ticket task.
+        :rtype: Secure_Change.XML_Objects.REST.Step_Task
+
+        """
+        return self.get_first_step().get_last_task()
 
     def get_step_by_id(self, step_id):
         """
@@ -470,60 +489,6 @@ class Ticket_Step(XML_Object_Base):
         """
         return str_to_bool(self.skipped)
 
-
-class FileLock:
-    TICKET_FILE_LOCK_PATH = "/tmp/"
-
-    def __init__(self, ticket_id, blocking=False):
-        self.ticket_id = str(ticket_id)
-        self.locked = False
-        self.lock = None
-        self.lock_file = None
-        self.blocking = blocking
-        self.file_path = FileLock.TICKET_FILE_LOCK_PATH + self.ticket_id + ".lock"
-        self._get_lock_file_handle()
-
-    def __enter__(self):
-        self.acquire()
-
-    # noinspection PyUnusedLocal
-    def __exit__(self, _type, value, traceback):
-        self.release()
-
-    def _get_lock_file_handle(self):
-        self.lock_file = open(self.file_path, "w")
-
-    def acquire(self, blocking=None):
-        # Give an opportunity to set blocking with the class for context use
-        if blocking is None:
-            blocking = self.blocking
-
-        if blocking:
-            lock_mode = fcntl.LOCK_EX
-        else:
-            lock_mode = fcntl.LOCK_EX | fcntl.LOCK_NB
-        if self.lock_file.closed:
-            self._get_lock_file_handle()
-        if not self.locked:
-            try:
-                self.lock = fcntl.flock(self.lock_file, lock_mode)
-                self.locked = True
-            except IOError:
-                raise IOError("Ticket with ID '{}' is already locked.".format(self.ticket_id))
-        else:
-            raise IOError("Ticket with ID '{}' is already locked.".format(self.ticket_id))
-
-    def release(self):
-        if self.locked:
-            try:
-                self.lock_file.close()
-                os.remove(self.file_path)
-                self.locked = False
-            except OSError:
-                pass
-
-#To keep backward compatibility with previous projects:
-Ticket_Lock = FileLock
 
 class Step_Field_Checkbox(Step_Field_Base):
     FIELD_CONTENT_ATTRIBUTES = "value"
@@ -990,6 +955,12 @@ class Step_Field_Multi_Group_Change(Step_Multi_Field_Base):
             group_change = Group_Change_Node.from_xml_node(group_change_node)
             group_changes.append(group_change)
         return cls(num_id, name, implementation_status, group_changes, read_only)
+
+    def to_pretty_str(self):
+        output = "Group Change field '{}'\n:".format(self.name)
+        for group_change in self.group_changes:
+            output += "\n{}\n".format(group_change.to_pretty_str())
+        return output
 
 
 class Group_Change_Node(XML_Object_Base):
@@ -1815,7 +1786,7 @@ class Group(XML_Object_Base):
         if members_node:
             members = Members.from_xml_node(members_node)
         else:
-            members = None
+            members = []
 
         return cls(user_id, user_name, user_email, out_of_office_from, out_of_office_until, send_email, notes, ldapDn,
                    group_permission, members, user_type)
@@ -1963,7 +1934,12 @@ class Ticket_History_Activities(XML_List):
         step_states = OrderedDict()
         for history_item in self._list_data:
             step_name = history_item.step_name
-            step_state = definitions.Ticket_Activity.find_matching_state(history_item.description)
+            try:
+                step_state = definitions.Ticket_Activity.find_matching_state(history_item.description)
+            except ValueError:
+                logger.debug("Step: {}, state: '{}'  was not found - ignoring it".format(step_name,
+                                                                                         history_item.description))
+                continue
             step_states[step_name] = step_state
         return step_states
 
