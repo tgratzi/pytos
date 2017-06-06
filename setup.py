@@ -17,7 +17,7 @@ def get_version():
 
 setup(
     name=package_name,
-    version=get_version() + 'a',
+    version=get_version() + 'b',
     author="Tufin Solution Engineering",
     author_email="support@tufin.com",
     url='http://pypi.python.org/pypi/pytos',
