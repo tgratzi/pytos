@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import datetime
-import fcntl
 import time
 from collections import OrderedDict
 
 
 from pytos.secureapp.xml_objects.base_types import Base_Link_Target, URL_Link
 from pytos.securechange import definitions
-from pytos.securechange.xml_objects.base_types import Step_Field_Base, Step_Multi_Field_Base, Target_Base
+from pytos.securechange.xml_objects.base_types import Step_Field_Base
 from pytos.securechange.xml_objects.restapi.step.access_request.accessrequest import *
 from pytos.common.base_types import XML_List, XML_Object_Base, Flat_XML_Object_Base
 from pytos.common.logging.definitions import XML_LOGGER_NAME
