@@ -36,8 +36,7 @@ You can also run individual tests with your default Python version by running ``
 SecureTrack
 ***********
 
-Connecting to SecureTrack with valid username and password
-::
+Connecting to SecureTrack with valid username and password::
 
 	from pytos.securechange.Helpers import Secure_Track_Helper
 	st_helper = Secure_Track_Helper("127.0.0.1", ("username", "password"))
