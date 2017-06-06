@@ -11,7 +11,7 @@ root_dir = os.path.abspath(os.path.dirname(__file__))
 def get_version():
     file_path = os.path.join(root_dir, 'pytos', '__init__.py')
     with open(file_path, 'rt') as f:
-        version = re.search('__version__ = "(\d+\.\d+\.\d+)', f.read()).group(1)
+        version = re.search('__version__ = "(\d+\.\d+\.\d+.+)', f.read()).group(1)
         return version
 
 
