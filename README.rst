@@ -18,8 +18,7 @@ by Tufin.
 Installation
 ************
 
-First install the package by running the following command
-::
+First install the package by running the following command::
 
 	# pip install pytos
 
@@ -46,8 +45,7 @@ Connecting to SecureTrack with valid username and password
 SecureChange
 ************
 
-Connecting to SecureChange with valid username and password
-::
+Connecting to SecureChange with valid username and password::
 
 	from pytos.securechange.Helpers import Secure_Change_Helper
 	sc_helper = Secure_Change_Helper("127.0.0.1", ("username", "password"))
@@ -55,8 +53,7 @@ Connecting to SecureChange with valid username and password
 SecureApp
 *********
 
-Connecting to SecureApp with valid username and password
-::
+Connecting to SecureApp with valid username and password::
 
 	from pytos.securechange.Helpers import Secure_Change_Helper
 	sa_helper = Secure_App_Helper("127.0.0.1", ("username", "password"))
@@ -82,8 +79,7 @@ The following table defines the log levels and messages, in decreasing order of 
 | DEBUG               | All levels.                                  |
 +---------------------+----------------------------------------------+
 
-Create an ini like configuration file with the following sections.
-::
+Create an ini like configuration file with the following sections.::
 
 	[common]
 	log_file_path = /var/log/pytos/
@@ -99,8 +95,7 @@ Create an ini like configuration file with the following sections.
 	web = WARNING
 	third_party = WARNING
 
-In your code call the following methods
-::
+In your code call the following methods::
 
 	import logging
 	from pytos.common.logging.Defines import COMMON_LOGGER_NAME
