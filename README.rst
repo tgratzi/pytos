@@ -20,6 +20,7 @@ Installation
 
 First install the package by running the following command
 ::
+
 	# pip install pytos
 
 Running Tests
@@ -38,6 +39,7 @@ SecureTrack
 
 Connecting to SecureTrack with valid username and password
 ::
+
 	from pytos.securechange.Helpers import Secure_Track_Helper
 	st_helper = Secure_Track_Helper("127.0.0.1", ("username", "password"))
 
@@ -46,6 +48,7 @@ SecureChange
 
 Connecting to SecureChange with valid username and password
 ::
+
 	from pytos.securechange.Helpers import Secure_Change_Helper
 	sc_helper = Secure_Change_Helper("127.0.0.1", ("username", "password"))
 
@@ -54,6 +57,7 @@ SecureApp
 
 Connecting to SecureApp with valid username and password
 ::
+
 	from pytos.securechange.Helpers import Secure_Change_Helper
 	sa_helper = Secure_App_Helper("127.0.0.1", ("username", "password"))
 
@@ -80,6 +84,7 @@ The following table defines the log levels and messages, in decreasing order of 
 
 Create an ini like configuration file with the following sections.
 ::
+
 	[common]
 	log_file_path = /var/log/pytos/
 
@@ -96,6 +101,7 @@ Create an ini like configuration file with the following sections.
 
 In your code call the following methods
 ::
+
 	import logging
 	from pytos.common.logging.Defines import COMMON_LOGGER_NAME
 	from pytos.common.logging.Logger import setup_loggers
