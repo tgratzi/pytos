@@ -19,7 +19,9 @@ Installation
 ************
 
 First install the package by running the following command
-::
+
+.. code-block:: sh
+
 	# pip install pytos
 
 Running Tests
