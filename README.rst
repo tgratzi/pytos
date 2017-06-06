@@ -1,130 +1,116 @@
-===============================
-Boto 3 - The AWS SDK for Python
-===============================
+pytos - The Tufin Orchestration Suite SDK for Python
+====================================================
 
-|Build Status| |Docs| |Version| |Gitter|
+|Build Status| |Version|
 
-Boto3 is the Amazon Web Services (AWS) Software Development Kit (SDK) for
-Python, which allows Python developers to write software that makes use
-of services like Amazon S3 and Amazon EC2. You can find the latest, most
-up to date, documentation at `Read the Docs`_, including a list of
-services that are supported. To see only those features which have been
-released, check out the `stable docs`_.
+.. |Build Status| image:: https://travis-ci.org/tgratzi/pytos.svg?branch=master
+	:target: https://travis-ci.org/tgratzi/pytos|
+	:alt: Build Status
+.. |Version| image:: http://img.shields.io/pypi/v/pytos.svg?style=flat
+	:target: https://pypi.python.org/pypi/pytos/
+	:alt: Version
 
+The pytos is the formal Python Software Development Kit (SDK) for Tufin Orchestration Suite (TOS).
+Python developers can use this package to write a scripts that able to connect, retrieve and update information
+in the TOS system. This SDK is an open source Python library to allow easy access to the native RESTful APIs provided
+by Tufin.
 
-.. _boto: https://docs.pythonboto.org/
-.. _`stable docs`: https://boto3.readthedocs.io/en/stable/
-.. _`Read the Docs`: https://boto3.readthedocs.io/en/latest/
-.. |Build Status| image:: http://img.shields.io/travis/boto/boto3/develop.svg?style=flat
-    :target: https://travis-ci.org/boto/boto3
-    :alt: Build Status
-.. |Gitter| image:: https://badges.gitter.im/boto/boto3.svg
-   :target: https://gitter.im/boto/boto3
-   :alt: Gitter
-.. |Docs| image:: https://readthedocs.org/projects/boto3/badge/?version=latest&style=flat
-    :target: https://boto3.readthedocs.io/en/latest/
-    :alt: Read the docs
-.. |Downloads| image:: http://img.shields.io/pypi/dm/boto3.svg?style=flat
-    :target: https://pypi.python.org/pypi/boto3/
-    :alt: Downloads
-.. |Version| image:: http://img.shields.io/pypi/v/boto3.svg?style=flat
-    :target: https://pypi.python.org/pypi/boto3/
-    :alt: Version
-.. |License| image:: http://img.shields.io/pypi/l/boto3.svg?style=flat
-    :target: https://github.com/boto/boto3/blob/develop/LICENSE
-    :alt: License
+Installation
+************
 
-Quick Start
------------
-First, install the library and set a default region:
-
-.. code-block:: sh
-
-    $ pip install boto3
-
-Next, set up credentials (in e.g. ``~/.aws/credentials``):
-
-.. code-block:: ini
-
-    [default]
-    aws_access_key_id = YOUR_KEY
-    aws_secret_access_key = YOUR_SECRET
-
-Then, set up a default region (in e.g. ``~/.aws/config``):
-
-.. code-block:: ini
-
-    [default]
-    region=us-east-1
-
-Then, from a Python interpreter:
-
-.. code-block:: python
-
-    >>> import boto3
-    >>> s3 = boto3.resource('s3')
-    >>> for bucket in s3.buckets.all():
-            print(bucket.name)
-
-Development
------------
-
-Getting Started
-~~~~~~~~~~~~~~~
-Assuming that you have Python and ``virtualenv`` installed, set up your
-environment and install the required dependencies like this instead of
-the ``pip install boto3`` defined above:
-
-.. code-block:: sh
-
-    $ git clone https://github.com/boto/boto3.git
-    $ cd boto3
-    $ virtualenv venv
-    ...
-    $ . venv/bin/activate
-    $ pip install -r requirements.txt
-    $ pip install -e .
+First install the package by running the following command
+::
+	# pip install pytos
 
 Running Tests
 ~~~~~~~~~~~~~
-You can run tests in all supported Python versions using ``tox``. By default,
-it will run all of the unit tests, but you can also specify your own
-``nosetests`` options. Note that this requires that you have all supported
-versions of Python installed, otherwise you must pass ``-e`` or run the
-``nosetests`` command directly:
+The package can be tested in all supported Python versions using ``tox``. The tested Python version
+must be installed and including ``tox``:
 
-.. code-block:: sh
+	$ tox -e py34
 
-    $ tox
-    $ tox tests/unit/test_session.py
-    $ tox -e py26,py33 tests/integration
+You can also run individual tests with your default Python version by running ``nosetests`` command directly:
 
-You can also run individual tests with your default Python version:
+	$ nosetests -v tests/securetrack_test/test_secure_track_helper_unittest.py:TestGeneralSettings
 
-.. code-block:: sh
+SecureTrack
+***********
 
-    $ nosetests tests/unit
+Connecting to SecureTrack with valid username and password
+::
+	from pytos.securechange.Helpers import Secure_Track_Helper
+	st_helper = Secure_Track_Helper("127.0.0.1", ("username", "password"))
 
-Generating Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~
-Sphinx is used for documentation. You can generate HTML locally with the
-following:
+SecureChange
+************
 
-.. code-block:: sh
+Connecting to SecureChange with valid username and password
+::
+	from pytos.securechange.Helpers import Secure_Change_Helper
+	sc_helper = Secure_Change_Helper("127.0.0.1", ("username", "password"))
 
-    $ pip install -r requirements-docs.txt
-    $ cd docs
-    $ make html
+SecureApp
+*********
 
+Connecting to SecureApp with valid username and password
+::
+	from pytos.securechange.Helpers import Secure_Change_Helper
+	sa_helper = Secure_App_Helper("127.0.0.1", ("username", "password"))
+
+How to use pytos logger
+***********************
+
+To use the pytos logging mechanism perform the following steps:
+
+The following table defines the log levels and messages, in decreasing order of severity.
+
++---------------------+----------------------------------------------+
+| Parameters          | Description                                  |
++=====================+==============================================+
+| CRITICAL            | Only critical messages will present.         |
++---------------------+----------------------------------------------+
+| ERROR               | Messages with error and above.               |
++---------------------+----------------------------------------------+
+| WARNING             | Message with warning and above.              |
++---------------------+----------------------------------------------+
+| INFO                | Messages with info and above.                |
++---------------------+----------------------------------------------+
+| DEBUG               | All levels.                                  |
++---------------------+----------------------------------------------+
+
+Create an ini like configuration file with the following sections.
+::
+	[common]
+	log_file_path = /var/log/pytos/
+
+	[log_levels]
+	common = WARNING
+	helpers = WARNING
+	reports = WARNING
+	requests = WARNING
+	mail = WARNING
+	sql = WARNING
+	xml = WARNING
+	web = WARNING
+	third_party = WARNING
+
+In your code call the following methods
+::
+	import logging
+	from pytos.common.logging.Defines import COMMON_LOGGER_NAME
+	from pytos.common.logging.Logger import setup_loggers
+	from pytos.common.functions.Config import Secure_Config_Parser
+
+	conf = Secure_Config_Parser(config_file_path="/ini/like/configuration/path/pytos.conf")
+	logger = logging.getLogger(COMMON_LOGGER_NAME)
+	setup_loggers(conf.dict("log_levels"), log_to_stdout=True)
+	logger.info("Hello world")
 
 Getting Help
-------------
+************
 
-We use GitHub issues for tracking bugs and feature requests and have limited
-bandwidth to address them. Please use these community resources for getting
+For tracking bugs and new features please use GitHub issues. Please also use these community resources for getting
 help:
 
-* Ask a question on `Stack Overflow <https://stackoverflow.com/>`__ and tag it with `boto3 <https://stackoverflow.com/questions/tagged/boto3>`__
-* Come join the AWS Python community chat on `gitter <https://gitter.im/boto/boto3>`__
-* Open a support ticket with `AWS Support <https://console.aws.amazon.com/support/home#/>`__
-* If it turns out that you may have found a bug, please `open an issue <https://github.com/boto/boto3/issues/new>`__
+* Join the `Tufin Developer Community <https://plus.google.com/communities/112366353546062524001>`__
+* If it turns out that you may have found a bug, please `open an issue <https://github.com/pytos/pytos/issues/new>`__
